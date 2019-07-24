@@ -1,0 +1,933 @@
+<!doctype html><html lang="en">
+  <head>
+	<meta name="generator" content="Hugo 0.54.0" />
+    <meta charset="utf-8">
+    <title>Platform Evolution — Post Mortem</title>
+    
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://kissy.github.io/platform-evolution-post-mortem/reveal-js/css/reveal.css">
+    <link rel="stylesheet" href="https://kissy.github.io/platform-evolution-post-mortem/reveal-js/css/theme/tvld.css" id="theme"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+    
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/css/print/pdf.css' : 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+  
+
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="platform-evolution">Platform Evolution</h1>
+
+<p>a post mortem</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#FFF">
+  
+
+<h2 id="let-s-go-back-in">let&rsquo;s go back in</h2>
+
+<h1 id="2017">2017</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/split.png"
+      data-background-transition="slide"
+      data-background-transition-speed="slow"
+      data-transition="slide"
+      data-transition-speed="normal">
+  
+
+<div class="section-title">
+    <div class="left">
+        <h3 class="vertical-center">Manual<br />database<br />migration</h3>
+    </div>
+    <div class="right dark-background">
+        <p>1 database server</p>
+        <p>37 <i>pools</i></p>
+        <p>3 files</p>
+    </div>
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<h1 id="1-hour">1 hour</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/one-does-not-simply.png"
+      data-transition="fade">
+  
+
+<div class="dark-background meme">
+    <h2>ONE DOES NOT SIMPLY</h2>
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <h2>MIGRATE DATABASE</h2>
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<p>today,<span class='fragment '
+  data-fragment-index='1'>
+  it would be
+</span></p>
+
+<h1 id="hahahugoshortcode-0xc00016d400-8-hbhb"><span class='fragment '
+  data-fragment-index='1'>
+  12 hours
+</span></h1>
+
+<span class='fragment '
+  data-fragment-index='1'>
+  for 55 pools and 25+ files
+</span>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/split.png"
+      data-background-transition="slide"
+      data-background-transition-speed="slow"
+      data-transition="slide"
+      data-transition-speed="normal">
+  
+
+<div class="section-title">
+    <div class="left">
+        <h3 class="vertical-center">Manual<br />platform<br />update</h3>
+    </div>
+    <div class="right dark-background">
+        <p>10 servers</p>
+        <p>1 ftp upload</p>
+        <p>10 copy-paste</p>
+    </div>
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<h1 id="45-minutes">45 minutes</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<p>today,<span class='fragment '
+  data-fragment-index='1'>
+  it would be
+</span></p>
+
+<h1 id="hahahugoshortcode-0xc00016d400-14-hbhb"><span class='fragment '
+  data-fragment-index='1'>
+  4 hours
+</span></h1>
+
+<span class='fragment '
+  data-fragment-index='1'>
+  for 50+ servers
+</span>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/split.png"
+      data-background-transition="slide"
+      data-background-transition-speed="slow"
+      data-transition="slide"
+      data-transition-speed="normal">
+  
+
+<div class="section-title">
+    <div class="left">
+        <h3 class="vertical-center">Manual<br />webapp<br />delivery</h3>
+    </div>
+    <div class="right dark-background">
+        <p>9 servers</p>
+        <p>12 artifacts</p>
+        <p>233 clics</p>
+    </div>
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<h1 id="1-hour-1">1 hour</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-color="#000"
+      data-transition="fade">
+  
+
+<div class="dark-background meme bref">
+    <h3>Bref,</h3>
+    <p>J'ai livré une<br />appli en prod</p>
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-transition="slide">
+  
+
+<p>today,<span class='fragment '
+  data-fragment-index='1'>
+  it would be
+</span></p>
+
+<h1 id="hahahugoshortcode-0xc00016d400-21-hbhb"><span class='fragment '
+  data-fragment-index='1'>
+  40 hours
+</span></h1>
+
+<span class='fragment '
+  data-fragment-index='1'>
+  for 50+ artifacts and 50+ servers
+</span>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="2019">2019</h1>
+
+<div class="fragment">
+    <p>Automation!<p>
+</div>
+
+</section><section>
+
+<h2 id="why-automation">Why automation?</h2>
+
+<p><span class='fragment '
+  >
+  Improve product delivery
+</span><br />
+<span class='fragment '
+  >
+  Prevent human errors
+</span><br />
+<span class='fragment '
+  >
+  Repeatability
+</span></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="what">What</h2>
+
+<h3 id="can-be-automated">can be automated?</h3>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p><img class="plain" src="images/devops.png" width="80%" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="release">Release</h2>
+
+<h4 id="vs">vs</h4>
+
+<h2 id="deploy">Deploy</h2>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<div class="fig-container" data-file="graph/release-deploy.html">
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h3 id="what-are-our">What are our</h3>
+
+<h2 id="artifacts">Artifacts?</h2>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p><img class="plain" src="background/artifacts.png" width="70%" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="how">How</h2>
+
+<h3 id="automate">automate?</h3>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/its-magic.jpg"
+      data-background-size="50%"
+      data-transition="fade-in slide-out">
+  
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h2 id="automation">Automation</h2>
+
+<h2 id="tools">Tools</h2>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h4 id="jenkins">Jenkins</h4>
+
+<p><img class="plain" src="images/jenkins.png" width="20%" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p>Schedule jobs<br />
+<span class='fragment '
+  >
+  Listen to events
+</span><br />
+<span class='fragment '
+  >
+  Notifications
+</span></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h4 id="nexus">Nexus</h4>
+
+<p><img class="plain" src="images/nexus.png" width="15%" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p>Artifact repository<br />
+<span class='fragment '
+  >
+  Central storage
+</span><br />
+<span class='fragment '
+  >
+  Access control
+</span></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h4 id="chef">Chef</h4>
+
+<p><img class="plain" src="images/chef.png" width="20%" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p>Infrastructure as Code<br />
+<span class='fragment '
+  >
+  Automatic tests
+</span><br />
+<span class='fragment '
+  >
+  Repeatability
+</span></p>
+
+</section><section>
+
+<h2 id="chef-1">Chef</h2>
+
+<h2 id="components">components</h2>
+
+</section><section>
+
+<h3 id="cookbooks">Cookbooks</h3>
+
+<p><img class="plain" src="images/chef-cookbooks.svg" width="30%" /><br />
+Generic reusable patterns</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h3 id="policies">Policies</h3>
+
+<p><img class="plain" src="images/chef-policies.svg" width="25%" /><br />
+Define all the configuration<br />
+for a server role</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<h3 id="policies-1">Policies</h3>
+
+<ul>
+<li>reverse-proxy</li>
+<li>jenkins</li>
+<li>mobile-app</li>
+<li>front-app</li>
+<li>back-app</li>
+<li>service-api</li>
+</ul>
+
+</section><section>
+
+<h3 id="data-bags">Data bags</h3>
+
+<pre><code class="javascript">{
+ "id": "item-id",
+ "property": {
+    "version": "2019.1",
+    "url": "https://prod.local.web"
+ }
+}</code></pre>
+  
+
+<p>Global configuration properties</p>
+
+</section><section>
+
+<h2 id="goals">Goals</h2>
+
+<p><span class='fragment '
+  >
+  Lots of artifacts to release
+</span><br />
+<span class='fragment '
+  >
+  More artifacts to deploy
+</span><br />
+<span class='fragment '
+  >
+  Lots of tools to do it
+</span></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="release-1">Release</h1>
+
+<h1 id="workflow">Workflow</h1>
+
+</section><section>
+
+<div class="fig-container" data-file="graph/war-release.html">
+</div>
+
+</section><section>
+
+<h2 id="classified-artifact">Classified Artifact</h2>
+
+<p>It’s built from the same POM<br />
+but with an alternative content</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<p><span style="font-weight: 300; font-size: 3em;">Yes, but&hellip;</span><br />
+We deploy WARs not JARs&hellip;</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h3 id="sql-pom">SQL pom</h3>
+
+<p>Contains as dependencies all the SQL-jars<br />
+required to run an application</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade">
+  
+
+<div class="fig-container" data-file="graph/sql-pom.html">
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0"
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="what-about">What about</h2>
+
+<h2 id="infrastructure">infrastructure?</h2>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/not-reinvent-wheel.jpg"
+      data-transition="fade">
+  
+
+</section><section>
+
+<h3 id="infrastructure-1">Infrastructure</h3>
+
+<h3 id="are-artifacts">are artifacts!</h3>
+
+</section><section>
+
+<div class="fig-container" data-file="graph/infra-release.html">
+</div>
+
+</section><section>
+
+<h2 id="data-bags-1">Data bags</h2>
+
+<ul>
+<li>artifacts</li>
+<li>batches</li>
+<li>tenants</li>
+<li>credentials</li>
+</ul>
+
+</section><section>
+
+<h3 id="context-keys">Context-Keys</h3>
+
+<pre><code class="json">{
+  "id": "config",
+  "elements": {
+    "debug": "false",
+    "baseUrl": {
+      "integration": "https://integ.local.web",
+      "staging": "https://staging.local.web",
+      "production": "https://prod.local.web"
+    },
+    "encryptionKey": {
+        "data_bag": "credentials",
+        "data_bag_item": "encryption-key-item",
+        "data_bag_field": "key"
+    }
+}</code></pre>
+  
+
+</section><section>
+
+<h3 id="artifacts-batches">Artifacts &amp; Batches</h3>
+
+<pre><code class="json">{
+    "id": "front-app",
+    "name": "front-app",
+    "package": "fr/kissy/",
+    "context_path": "front",
+    "staging": {
+        "checksum": "f6998904481a9cb65f9803093f7fbe88aea964e82afac6a37c9b958afc7c77e8",
+        "version": "2019.2"
+    },
+    "production": {
+        "checksum": "a5ef7d0a0b3df0a62c582d3802dcd6500f9bcac6f1b921fe86fe249e89693da7",
+        "version": "2019.1"
+    }
+}</code></pre>
+  
+
+</section><section>
+
+<h3 id="tenants">Tenants</h3>
+
+<pre><code class="json">{
+  "id": "demo",
+  "database": {
+    "user": "DB_USER",
+    "password": "P@ssW0rd",
+    "url": "db.integ.local.web:3306"
+  }
+}</code></pre>
+  
+
+</section><section>
+
+<h2 id="released-artifacts">Released Artifacts</h2>
+
+<p><span class='fragment '
+  >
+  War &amp; Jar
+</span><br />
+<span class='fragment '
+  >
+  SQL Pom &amp; SQL Jar
+</span><br />
+<span class='fragment '
+  >
+  Policy
+</span><br />
+<span class='fragment '
+  >
+  Data Bag
+</span><br />
+<span class='fragment '
+  >
+  Zip
+</span></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="deploy-1">Deploy</h1>
+
+<h1 id="workflow-1">Workflow</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="chef-client">Chef-Client</h2>
+
+<span class='fragment '
+  >
+  <img class="plain" src="images/one-ring.png" width="20%" />
+</span>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<div class="fig-container" data-file="graph/deploy.html">
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h2 id="what-about-1">What about</h2>
+
+<h2 id="database">database?</h2>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<div class="fig-container" data-file="graph/deploy-database.html">
+</div>
+
+</section><section>
+
+<h2 id="summary">Summary</h2>
+
+<p><span class='fragment '
+  >
+  Jenkins release all artifacts
+</span><br />
+<span class='fragment '
+  >
+  Jenkins deploy using chef-client
+</span><br />
+<span class='fragment '
+  >
+  Jenkins update database with flyway
+</span></p>
+
+</section><section>
+
+<h1 id="questions">Questions?</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="scalability">Scalability</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background-image="background/split.png"
+      data-background-transition="slide"
+      data-background-transition-speed="slow"
+      data-transition="slide"
+      data-transition-speed="normal">
+  
+
+<div class="section-title">
+    <div class="left">
+        <h3 class="vertical-center">Manual<br />load<br />balancing</h3>
+    </div>
+    <div class="right dark-background">
+        <p>55 pools</p>
+        <p>70 servers</p>
+    </div>
+</div>
+
+</section><section>
+
+<p><img class="plain" src="images/spaghetti.svg" /></p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0"
+      data-background-image="background/tetris.jpg"
+      data-background-transition="slide">
+  
+
+</section><section>
+
+<h2 id="software">Software</h2>
+
+<h2 id="load-balancing">Load Balancing</h2>
+
+</section><section>
+
+<div class="fig-container" data-file="graph/slb.html">
+</div>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="what-s-next">What&rsquo;s next?</h1>
+
+</section><section>
+
+<h1 id="kubernetes">Kubernetes</h1>
+
+<h1 id="docker">&amp; Docker</h1>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="slide-in fade-out">
+  
+
+<h3 id="lastly">Lastly,</h3>
+
+<p>Infra team is like<br />
+other development teams&hellip;</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-transition="fade-in slide-out">
+  
+
+<p>We accept merge requests!</p>
+
+</section>
+
+
+<section data-noprocess data-shortcode-slide
+      data-background="#1565C0">
+  
+
+<h1 id="thank-you">Thank you!</h1>
+</section>
+
+</div>
+      
+
+    </div>
+    <script type="application/json" id="reveal-hugo-site-params">{"height":"80%","reveal_cdn":"https://kissy.github.io/platform-evolution-post-mortem/reveal-js","theme":"tvld","width":"80%"}</script>
+    <script type="application/json" id="reveal-hugo-page-params">null</script>
+    <script type="text/javascript"> window.revealHugoDependencies = { dependencies: [
+          { src: 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'https:\/\/kissy.github.io\/platform-evolution-post-mortem\/reveal-js/plugin/zoom-js/zoom.js', async: true },
+          
+          
+          
+          { src: '\/platform-evolution-post-mortem\/reveal-js\/plugin\/reveald3\/reveald3.js', async: true }
+      ]};
+    </script>
+    <script src="https://kissy.github.io/platform-evolution-post-mortem/reveal-js/lib/js/head.min.js"></script>
+    <script src="https://kissy.github.io/platform-evolution-post-mortem/reveal-js/js/reveal.js"></script>
+    <script type="text/javascript">
+      
+      
+      function camelize(map) {
+        if (map) {
+          Object.keys(map).forEach(function(k) {
+            newK = k.replace(/(\_\w)/g, function(m) { return m[1].toUpperCase() });
+            if (newK != k) {
+              map[newK] = map[k];
+              delete map[k];
+            }
+          });
+        }
+        return map;
+      }
+      
+      var revealHugoDefaults = { center: true, controls: true, history: true, progress: true, transition: "slide" };
+      var revealHugoSiteParams = JSON.parse(document.getElementById('reveal-hugo-site-params').innerHTML);
+      var revealHugoPageParams = JSON.parse(document.getElementById('reveal-hugo-page-params').innerHTML);
+      
+      var options = Object.assign({},
+        camelize(revealHugoDefaults),
+        camelize(revealHugoSiteParams),
+        camelize(revealHugoPageParams),
+        revealHugoDependencies
+      );
+      Reveal.initialize(options);
+    </script>
+    
+    
+  </body>
+</html>

@@ -1,0 +1,77 @@
+.reveal .section-title {
+    display: flex;
+}
+
+.section-title .left, .section-title .right {
+    flex: 1;
+}
+
+.vertical-center {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.text-separator {
+    margin: 0 80px 20px 80px;
+}
+
+.reveal .dark-background,
+.reveal .dark-background h1,
+.reveal .dark-background h2,
+.reveal .dark-background h3,
+.reveal .dark-background h4,
+.reveal .dark-background h5,
+.reveal .dark-background h6 {
+    color: #fff;
+}
+
+.reveal .meme h2 {
+    font-weight: 600;
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+}
+.reveal .meme.bref {
+    font-family: "Courier New", Courier, serif;
+    font-size: 130%;
+    text-align: left;
+    padding-left: 20%;
+}
+.reveal .meme.bref h3 {
+    font-family: "Courier New", Courier, serif;
+    text-transform: none;
+    font-weight: 300;
+}
+
+.reveal .artifact {
+    font-size: 150%;
+    position: absolute;
+    display: block;
+}
+.reveal .artifact.artifact-1 {
+    left: 25%;
+    top: -240%;
+}
+.reveal .artifact.artifact-2 {
+    right: 25%;
+    top: -210%;
+}
+.reveal .artifact.artifact-3 {
+    right: 15%;
+    bottom: -10%;
+}
+.reveal .artifact.artifact-4 {
+    right: 25%;
+    bottom: -240%;
+}
+.reveal .artifact.artifact-5 {
+    left: 15%;
+    top: -10%;
+}
+.reveal .artifact.artifact-6 {
+    left: 25%;
+    bottom: -210%;
+}
+
+.reveal h3#artifacts {
+    margin-bottom: 0;
+}

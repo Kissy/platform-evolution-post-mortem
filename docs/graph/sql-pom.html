@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+<style type="text/css">
+    body {
+        font: 12px Arial;
+        font-family: 'Roboto', sans-serif;
+        text-align: center;
+    }
+
+    body > svg {
+        background: none;
+    }
+
+    .node {
+        transform-origin: center;
+    }
+
+    .node > path {
+        fill: #085FC0;
+    }
+    .node.code > path,
+    .node.code > text,
+    .arrow-head#code {
+        fill: #00695C;
+    }
+    .node.build > path,
+    .node.build > text,
+    .arrow-head#build {
+        fill: #37474F;
+    }
+    .node.test > path,
+    .node.test > text,
+    .arrow-head#test {
+        fill: #EF6C00;
+    }
+    .node.release > path,
+    .node.release > text,
+    .arrow-head#release {
+        fill: #0277BD;
+    }
+
+    .node > text {
+        text-anchor: middle;
+    }
+
+    .node > text.icon {
+        fill: white;
+        dominant-baseline: central;
+    }
+
+    .link {
+        fill: none;
+    }
+    .link.code {
+        stroke: #00695C;
+    }
+    .link.build {
+        stroke: #37474F;
+    }
+    .link.test {
+        stroke: #EF6C00;
+    }
+    .link.release {
+        stroke: #0277BD;
+    }
+
+</style>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+<script type="text/javascript">
+
+    var width = window.innerWidth * 0.8;
+    var height = window.innerHeight * 0.8;
+    var centerX = width / 2;
+    var centerY = height / 2;
+    var chevronWidth = width / 3;
+    var chevronHeight = height / 15;
+
+    function chevron(container, text, color) {
+        var group = container.append("g")
+            .style("opacity", 0);
+        group
+            .append("rect")
+            .attr("width", chevronWidth)
+            .attr("height", chevronHeight)
+            .attr("rx", 10)
+            .style("fill", color);
+        group.append("text")
+            .attr("x", chevronWidth / 2)
+            .attr("y", chevronHeight / 2)
+            .attr("fill", "#FFF")
+            .attr("font-size", "50")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .text(text);
+        return group;
+    }
+
+    function squircle(size, round) {
+        var halfSize = size / 2;
+        var a = 0;
+        var b = halfSize - size;
+        var c = halfSize;
+        var d = b + round;
+        var e = c - round;
+        return "M " + a + "," + b +
+            " C " + d + "," + b + " " + b + "," + d + " " + b + "," + a +
+            " " + b + "," + e + " " + d + "," + c + " " + a + "," + c +
+            " " + e + "," + c + " " + c + "," + c + " " + c + "," + a +
+            " " + c + "," + d + " " + c + "," + b + " " + a + "," + b +
+            " Z";
+    }
+
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 0 " + (width) + " " + (height));
+
+    var linkGenerator = d3.linkHorizontal()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        });
+
+
+    svgContainer.append("svg:defs").selectAll("marker")
+        .data(["test"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 5)
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .classed("arrow-head", true)
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+    // Rect
+    var chef = chevron(svgContainer, "Chef Server", "#00695C");
+    chef.attr("transform", "translate(" + (width * 0.20 - chevronWidth / 2) + ", 0)");
+    var nexus = chevron(svgContainer, "Nexus", "#0277BD");
+    nexus.attr("transform", "translate(" + (width * 0.80 - chevronWidth / 2) + ", 0)");
+
+
+    function createIcon(symbol, text, x, y, ratio, clazz, font_ratio) {
+        if (!font_ratio) {
+            font_ratio = 1;
+        }
+        var icon = svgContainer.append("g")
+            .classed("node", true)
+            .classed(clazz, true)
+            .attr("transform", "translate(" + x + "," + y + ")")
+            .style("opacity", 0);
+        icon.append("path")
+            .classed("source-code", true)
+            .attr("d", squircle(width / (10 * ratio), 6));
+        icon.append("text")
+            .classed("icon", true)
+            .style("font-size", (width / (250 * ratio * font_ratio)) + "em")
+            .text(symbol);
+        icon.append("text")
+            .classed("label", true)
+            .attr("dy", width / (12 * ratio))
+            .style("font-size", (width / (350 * ratio)) + "em")
+            .text(text);
+        return icon;
+    }
+
+    function createLink(sourceX, sourceY, targetX, targetY, clazz) {
+        return svgContainer.append("path")
+            .classed("link", true)
+            .classed(clazz, true)
+            .style("stroke-width", (width / 300) + "px")
+            .data([
+                {
+                    source: {x: sourceX, y: sourceY},
+                    target: {x: targetX, y: targetY}
+                }
+            ])
+            .attr("d", linkGenerator);
+    }
+
+    function setTotalLength(link, totalLength) {
+        link.attr("stroke-dasharray", totalLength + " " + totalLength)
+            .attr("stroke-dashoffset", totalLength);
+    }
+
+    var heightOffset = height * 0.1;
+
+    var pomX = width * 0.10;
+    var pomY = height * 0.20 - heightOffset;
+    var pom = createIcon("xml", "Pom", pomX, pomY, 1.2, "code");
+    var pomWidth = pom.select("path").node().getBBox().width;
+    var pomHeight = pom.node().getBBox().height;
+
+    var dependency1X = width * 0.2;
+    var dependency1Y = height * 0.45 - heightOffset;
+    var dependency1 = createIcon("jar", "Business", dependency1X, dependency1Y, 1.7, "code");
+    var dependency1Width = dependency1.select("path").node().getBBox().width;
+
+    var dependency2X = width * 0.2;
+    var dependency2Y = height * 0.65 - heightOffset;
+    var dependency2 = createIcon("jar", "Supp. Business", dependency2X, dependency2Y, 1.7, "code");
+    var dependency2Width = dependency2.select("path").node().getBBox().width;
+
+    var dependency3X = width * 0.2;
+    var dependency3Y = height * 0.85 - heightOffset;
+    var dependency3 = createIcon("jar", "Generic", dependency3X, dependency3Y, 1.7, "code");
+    var dependency3Width = dependency3.select("path").node().getBBox().width;
+
+    var link1 = createLink(pomX, pomY + pomHeight / 1.5,
+        pomX, dependency3Y, "code");
+    var totalLength1 = link1.node().getTotalLength();
+    setTotalLength(link1, totalLength1);
+
+    var link2 = createLink(pomX, dependency1Y,
+        dependency1X - dependency1Width / 1.5, dependency1Y, "code");
+    var totalLength2 = link2.node().getTotalLength();
+    setTotalLength(link2, totalLength2);
+
+    var link3 = createLink(pomX, dependency2Y,
+        dependency2X - dependency2Width / 1.5, dependency2Y, "code");
+    var totalLength3 = link3.node().getTotalLength();
+    setTotalLength(link3, totalLength3);
+
+    var link4 = createLink(pomX, dependency3Y,
+        dependency3X - dependency3Width / 1.5, dependency3Y, "code");
+    var totalLength4 = link3.node().getTotalLength();
+    setTotalLength(link4, totalLength4);
+
+    // Test
+    var businessPomX = width * 0.65;
+    var businessPomY = height * 0.20 - heightOffset;
+    var businessPom = createIcon("xml", "SQL Business Pom", businessPomX, businessPomY, 1.2, "release");
+    var businessPomWidth = businessPom.select("path").node().getBBox().width;
+    var businessPomHeight = businessPom.node().getBBox().height;
+
+    var dependency4X = width * 0.55;
+    var dependency4Y = height * 0.45 - heightOffset;
+    var dependency4 = createIcon("jar", "SQL Business", dependency4X, dependency4Y, 1.7, "release");
+    var dependency4Width = dependency4.select("path").node().getBBox().width;
+
+    var dependency5X = width * 0.55;
+    var dependency5Y = height * 0.65 - heightOffset;
+    var dependency5 = createIcon("jar", "SQL Supp. Business", dependency5X, dependency5Y, 1.7, "release");
+    var dependency5Width = dependency5.select("path").node().getBBox().width;
+
+    var link5 = createLink(businessPomX, dependency5Y,
+        businessPomX, businessPomY + businessPomHeight / 1.5, "release");
+    var totalLength5 = link5.node().getTotalLength();
+    setTotalLength(link5, totalLength5);
+
+    var link6 = createLink(dependency4X + dependency4Width / 1.5, dependency4Y,
+        businessPomX, dependency1Y, "release");
+    var totalLength6 = link6.node().getTotalLength();
+    setTotalLength(link6, totalLength6);
+
+    var link7 = createLink(dependency5X + dependency5Width / 1.5, dependency5Y,
+        businessPomX, dependency2Y, "release");
+    var totalLength7 = link7.node().getTotalLength();
+    setTotalLength(link7, totalLength7);
+
+    // Generic
+    var genericPomX = width * 0.90;
+    var genericPomY = height * 0.20 - heightOffset;
+    var genericPom = createIcon("xml", "SQL Generic Pom", genericPomX, genericPomY, 1.2, "release");
+    var genericPomWidth = genericPom.select("path").node().getBBox().width;
+    var genericPomHeight = genericPom.node().getBBox().height;
+
+    var dependency6X = width * 0.80;
+    var dependency6Y = height * 0.85 - heightOffset;
+    var dependency6 = createIcon("jar", "SQL Generic", dependency6X, dependency6Y, 1.7, "release");
+    var dependency6Width = dependency4.select("path").node().getBBox().width;
+
+    var link8 = createLink(genericPomX, dependency6Y,
+        genericPomX, genericPomY + genericPomHeight / 1.5, "release");
+    var totalLength8 = link8.node().getTotalLength();
+    setTotalLength(link8, totalLength8);
+
+    var link9 = createLink(dependency6X + dependency6Width / 1.5, dependency6Y,
+        genericPomX, dependency6Y, "release");
+    var totalLength9 = link9.node().getTotalLength();
+    setTotalLength(link9, totalLength9);
+
+
+    // Links
+    var link10 = createLink(dependency1X + dependency1Width / 1.5, dependency1Y,
+        dependency4X - dependency4Width / 1.5, dependency4Y, "test");
+    var totalLength10 = link10.node().getTotalLength();
+    setTotalLength(link10, totalLength10);
+
+    var link11 = createLink(dependency2X + dependency2Width / 1.5, dependency2Y,
+        dependency5X - dependency5Width / 1.5, dependency5Y, "test");
+    var totalLength11 = link11.node().getTotalLength();
+    setTotalLength(link11, totalLength11);
+
+    var link12 = createLink(dependency3X + dependency3Width / 1.5, dependency3Y,
+        dependency6X - dependency6Width / 1.5, dependency6Y, "test");
+    var totalLength12 = link12.node().getTotalLength();
+    setTotalLength(link12, totalLength12);
+
+    pom.style("opacity", 1);
+
+    var _transitions = [
+        {
+            transitionForward: function () {
+                var linkt = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var dept = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150);
+
+                        dependency1.transition(dept)
+                            .style("opacity", 1);
+                        dependency2.transition(dept)
+                            .style("opacity", 1);
+                        dependency3.transition(dept)
+                            .style("opacity", 1);
+                    });
+
+                link1
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link2
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link3
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link4
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+
+            },
+            transitionBackward: function () {
+                var dept = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        var linkt = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250);
+
+                        link1
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength1);
+                        link2
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength2);
+                        link3
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength3);
+                        link4
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength4);
+                    });
+
+                dependency1.transition(dept)
+                    .style("opacity", 0);
+                dependency2.transition(dept)
+                    .style("opacity", 0);
+                dependency3.transition(dept)
+                    .style("opacity", 0);
+            }
+        },
+        {
+            transitionForward: function() {
+                var linkt = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var dept = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150);
+
+                        dependency4.transition(dept)
+                            .style("opacity", 1);
+                        dependency5.transition(dept)
+                            .style("opacity", 1);
+                    });
+
+                link10
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0)
+                    .on("end", function() {
+                        link10.attr("marker-end", "url(#test)");
+                    });
+                link11
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0)
+                    .on("end", function() {
+                        link11.attr("marker-end", "url(#test)");
+                    });
+            },
+            transitionBackward: function() {
+                var dept = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        var linkt = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250);
+
+                        link10
+                            .attr("marker-end", "")
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength10);
+                        link11
+                            .attr("marker-end", "")
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength11);
+                    });
+
+                dependency4.transition(dept)
+                    .style("opacity", 0);
+                dependency5.transition(dept)
+                    .style("opacity", 0);
+            }
+        },
+        {
+            transitionForward: function() {
+                var linkt = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var dept = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150);
+
+                        businessPom.transition(dept)
+                            .style("opacity", 1);
+                    });
+
+                link5
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link6
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link7
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+            },
+            transitionBackward: function() {
+                var dept = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        var linkt = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250)
+
+                        link5
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength5);
+                        link6
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength6);
+                        link7
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength7);
+                    });
+
+                businessPom.transition(dept)
+                    .style("opacity", 0);
+            }
+        },
+        {
+            transitionForward: function () {
+                var linkt = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var dept = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150);
+
+                        dependency6.transition(dept)
+                            .style("opacity", 1);
+                    });
+
+                link12
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0)
+                    .on("end", function() {
+                        link12.attr("marker-end", "url(#test)");
+                    });
+            },
+            transitionBackward: function () {
+                var dept = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        dependency6.transition(dept)
+                            .style("opacity", 0);
+                        var linkt = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250);
+
+                        link12
+                            .attr("marker-end", "")
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength12);
+                    });
+            }
+        },
+        {
+            transitionForward: function () {
+                businessPom.style("opacity", 1);
+                dependency1.style("opacity", 1);
+                dependency2.style("opacity", 1);
+                dependency3.style("opacity", 1);
+                dependency4.style("opacity", 1);
+                dependency5.style("opacity", 1);
+                dependency6.style("opacity", 1);
+
+                link1.style("stroke-dashoffset", 0);
+                link2.style("stroke-dashoffset", 0);
+                link3.style("stroke-dashoffset", 0);
+                link4.style("stroke-dashoffset", 0);
+                link5.style("stroke-dashoffset", 0);
+                link6.style("stroke-dashoffset", 0);
+                link7.style("stroke-dashoffset", 0);
+                link10.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#test)");
+                link11.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#test)");
+                link12.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#test)");
+
+                var linkt = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var dept = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150);
+
+                        genericPom.transition(dept)
+                            .style("opacity", 1);
+                    });
+
+                link8
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+                link9
+                    .transition(linkt)
+                    .style("stroke-dashoffset", 0);
+            },
+            transitionBackward: function () {
+                var dept = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        var linkt = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250);
+
+                        link8
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength8);
+                        link9
+                            .transition(linkt)
+                            .style("stroke-dashoffset", totalLength9);
+                    });
+
+                genericPom.transition(dept)
+                    .style("opacity", 0);
+
+            }
+        }
+    ];
+</script>
+</body>

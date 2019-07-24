@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+<style type="text/css">
+
+    body {
+        font: 12px Arial;
+        font-family: 'Roboto', sans-serif;
+        text-align: center;
+    }
+
+    body > svg {
+        background: none;
+    }
+
+    .node {
+        transform-origin: center;
+    }
+
+    .node > circle {
+        stroke-width: 3px;
+        fill: white;
+    }
+
+    .node > path {
+        fill: #37474F;
+    }
+
+    .node > text {
+        text-anchor: middle;
+        fill: #37474F;
+    }
+
+    .node > text.icon {
+        fill: white;
+        dominant-baseline: central;
+    }
+
+    .step {
+        fill: #EF6C00;
+        text-anchor: middle;
+    }
+
+    .link {
+        stroke: #37474F;
+        fill: none;
+    }
+
+    .arrow-head {
+        fill: #37474F;
+    }
+
+    .curly-brace {
+        stroke: #EF6C00;
+        stroke-width: 5px;
+        fill: none;
+    }
+
+</style>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+<script type="text/javascript">
+
+    var width = window.innerWidth * 0.8;
+    var height = window.innerHeight * 0.6;
+    var centerX = width / 2;
+    var centerY = height / 2;
+
+    function squircle(size, round) {
+        var halfSize = size / 2;
+        var a = 0;
+        var b = halfSize - size;
+        var c = halfSize;
+        var d = b + round;
+        var e = c - round;
+        return "M " + a + "," + b +
+            " C " + d + "," + b + " " + b + "," + d + " " + b + "," + a +
+            " " + b + "," + e + " " + d + "," + c + " " + a + "," + c +
+            " " + e + "," + c + " " + c + "," + c + " " + c + "," + a +
+            " " + c + "," + d + " " + c + "," + b + " " + a + "," + b +
+            " Z";
+    }
+
+    //returns path string d for <path d="This string">
+    //a curly brace between x1,y1 and x2,y2, w pixels wide
+    //and q factor, .5 is normal, higher q = more expressive bracket
+    function curlyBrace(x1, y1, x2, y2, w, q) {
+        var dx = x1 - x2;
+        var dy = y1 - y2;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        dx = dx / len;
+        dy = dy / len;
+
+        var qx1 = x1 + q * w * dy;
+        var qy1 = y1 - q * w * dx;
+        var qx2 = (x1 - .25 * len * dx) + (1 - q) * w * dy;
+        var qy2 = (y1 - .25 * len * dy) - (1 - q) * w * dx;
+        var tx1 = (x1 - .5 * len * dx) + w * dy;
+        var ty1 = (y1 - .5 * len * dy) - w * dx;
+        var qx3 = x2 + q * w * dy;
+        var qy3 = y2 - q * w * dx;
+        var qx4 = (x1 - .75 * len * dx) + (1 - q) * w * dy;
+        var qy4 = (y1 - .75 * len * dy) - (1 - q) * w * dx;
+
+        return ("M " + x1 + " " + y1 +
+            " Q " + qx1 + " " + qy1 + " " + qx2 + " " + qy2 +
+            " T " + tx1 + " " + ty1 +
+            " M " + x2 + " " + y2 +
+            " Q " + qx3 + " " + qy3 + " " + qx4 + " " + qy4 +
+            " T " + tx1 + " " + ty1);
+    }
+
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 0 " + (width * 0.30) + " " + height);
+
+    var linkGenerator = d3.linkHorizontal()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        });
+
+    svgContainer.append("svg:defs").selectAll("marker")
+        .data(["end"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 5)
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .classed("arrow-head", true)
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+
+    function createIcon(symbol, text, x, y, ratio, clazz, fontRatio) {
+        if (!fontRatio) {
+            fontRatio = 1;
+        }
+        var icon = svgContainer.append("g")
+            .classed("node", true)
+            .classed(clazz, true)
+            .attr("transform", "translate(" + x + "," + y + ")")
+            .style("opacity", 0);
+        icon.append("path")
+            .classed("source-code", true)
+            .attr("d", squircle(width / (10 * ratio), 6));
+        icon.append("text")
+            .classed("icon", true)
+            .style("font-size", (width / (250 * ratio * fontRatio)) + "em")
+            .text(symbol);
+        icon.append("text")
+            .classed("label", true)
+            .attr("dy", width / (11 * ratio))
+            .style("font-size", (width / (300 * ratio)) + "em")
+            .text(text);
+        return icon;
+    }
+
+    var sourceCode = createIcon("</>", "Source code", (width * 0.15), (centerY), 0.75, "");
+    var sourceCodeWidth = sourceCode.select("path").node().getBBox().width;
+    var sourceCodeHeight = sourceCode.select("path").node().getBBox().height;
+    sourceCode.style("opacity", 1);
+
+    var artifact = createIcon("AD", "Artifact", (centerX), (centerY), 0.75, "");
+    var artifactWidth = artifact.select("path").node().getBBox().width;
+    var artifactHeight = artifact.select("path").node().getBBox().height;
+
+
+    var production = createIcon("VM", "Server", (width * 0.85), (centerY), 0.75, "");
+    var productionWidth = production.select("path").node().getBBox().width;
+    var productionHeight = production.select("path").node().getBBox().height;
+
+    var link = svgContainer.append("path")
+        .classed("link", true)
+        .style("stroke-width", (width / 300) + "px")
+        .data([
+            {
+                source: {x: (width * 0.15 + sourceCodeWidth / 1.5), y: (centerY)},
+                target: {x: (centerX - artifactWidth / 1.5), y: (centerY)}
+            }
+        ])
+        .attr("d", linkGenerator);
+    var totalLength = link.node().getTotalLength();
+    link.attr("stroke-dasharray", totalLength + " " + totalLength)
+        .attr("stroke-dashoffset", totalLength);
+
+    var link2 = svgContainer.append("path")
+        .classed("link", true)
+        .style("stroke-width", (width / 300) + "px")
+        .data([
+            {
+                source: {x: (centerX + artifactWidth / 1.5), y: (centerY)},
+                target: {x: (width * 0.85 - productionWidth / 1.5), y: (centerY)}
+            }
+        ])
+        .attr("d", linkGenerator);
+    var totalLength2 = link.node().getTotalLength();
+    link2.attr("stroke-dasharray", totalLength2 + " " + totalLength2)
+        .attr("stroke-dashoffset", totalLength2);
+
+    var release = svgContainer.append("g")
+        .style("opacity", 0);
+    release.append("text")
+        .classed("step", true)
+        .attr("transform", "translate(" + ((width * 0.15 + centerX) / 2) + "," + (centerY * 0.9 - sourceCodeHeight) + ")")
+        .style("font-size", (width / 250) + "em")
+        .text("Release");
+    release.append("path")
+        .classed("curly-brace", true)
+        .style("stroke-width", (width / 300) + "px")
+        .attr("d", curlyBrace(width * 0.15, centerY * 0.9 - sourceCodeHeight * 0.6,
+            centerX * 0.98, centerY * 0.9 - artifactHeight * 0.6,
+            -30, 0.5));
+
+    var deploy = svgContainer.append("g")
+        .style("opacity", 0);
+    deploy.append("text")
+        .classed("step", true)
+        .attr("transform", "translate(" + ((centerX + width * 0.85) / 2) + "," + (centerY * 0.9 - artifactHeight) + ")")
+        .style("font-size", (width / 250) + "em")
+        .text("Deploy");
+    deploy.append("path")
+        .classed("curly-brace", true)
+        .style("stroke-width", (width / 300) + "px")
+        .attr("d", curlyBrace(centerX * 1.02, centerY * 0.9 - artifactHeight * 0.6,
+            width * 0.85, centerY * 0.9 - productionHeight * 0.6,
+            -30, 0.5));
+
+    var _transitions = [
+        {
+            transitionForward: function () {
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 0 " + (width * 0.65) + " " + height)
+                    .duration(100);
+                link
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#end)")
+                    .duration(150);
+                artifact
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(250);
+            },
+            transitionBackward: function () {
+                artifact
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                link
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(150)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength)
+                    .duration(250);
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 0 " + (width * 0.30) + " " + height)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function () {
+                artifact.style("opacity", 1);
+                link.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#end)");
+
+                release
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function () {
+                release
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+            }
+        },
+        {
+            transitionForward: function () {
+                artifact.style("opacity", 1);
+                link.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#end)");
+
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 0 " + width + " " + height)
+                    .duration(100);
+                link2
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#end)")
+                    .duration(150);
+                production
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(250);
+            },
+            transitionBackward: function () {
+                release
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                production
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(100);
+                link2
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(150)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength2)
+                    .duration(250);
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 0 " + (width * 0.65) + " " + height)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function () {
+                artifact.style("opacity", 1);
+                production.style("opacity", 1);
+                release.style("opacity", 1);
+                link.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#end)");
+                link2.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#end)");
+                svgContainer.attr("viewBox", "0 0 " + width + " " + height);
+
+                deploy
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function () {
+                deploy
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+            }
+        }
+    ]
+</script>
+</body>

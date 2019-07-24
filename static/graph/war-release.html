@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+<style type="text/css">
+    body {
+        font: 12px Arial;
+        font-family: 'Roboto', sans-serif;
+        text-align: center;
+    }
+
+    body > svg {
+        background: none;
+    }
+
+    .node {
+        transform-origin: center;
+    }
+
+    .node > path {
+        fill: #085FC0;
+    }
+    .node.code > path,
+    .node.code > text {
+        fill: #00695C;
+    }
+    .node.build > path,
+    .node.build > text,
+    .arrow-head#build {
+        fill: #37474F;
+    }
+    .node.test > path,
+    .node.test > text,
+    .arrow-head#test {
+        fill: #EF6C00;
+    }
+    .node.release > path,
+    .node.release > text,
+    .arrow-head#release {
+        fill: #0277BD;
+    }
+
+    .node > text {
+        text-anchor: middle;
+    }
+
+    .node > text.icon {
+        fill: white;
+        dominant-baseline: central;
+    }
+
+    .link {
+        fill: none;
+    }
+    .link.build {
+        stroke: #37474F;
+    }
+    .link.test {
+        stroke: #EF6C00;
+    }
+    .link.release {
+        stroke: #0277BD;
+    }
+
+</style>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+<script type="text/javascript">
+
+    var width = window.innerWidth * 0.8;
+    var height = window.innerHeight * 0.8;
+    var centerX = width / 2;
+    var centerY = height / 2;
+    var chevronWidth = width / 4;
+    var chevronHeight = height / 15;
+
+    function chevron(container, text, color) {
+        var angle = 0.1;
+
+        var group = container.append("g");
+        group
+            .append("polygon")
+            .attr("points", [
+                "0,0",
+                (chevronWidth * (1 - angle)) + ",0",
+                (chevronWidth) + "," + (chevronHeight / 2),
+                (chevronWidth * (1 - angle)) + "," + chevronHeight,
+                "0," + chevronHeight,
+                (chevronWidth * angle) + "," + (chevronHeight / 2)
+            ].join(" "))
+            .style("fill", color);
+        group.append("text")
+            .attr("x", chevronWidth / 2)
+            .attr("y", chevronHeight / 2 + 3)
+            .attr("fill", "#FFF")
+            .attr("font-size", "50")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .text(text);
+        return group;
+    }
+
+    function squircle(size, round) {
+        var halfSize = size / 2;
+        var a = 0;
+        var b = halfSize - size;
+        var c = halfSize;
+        var d = b + round;
+        var e = c - round;
+        return "M " + a + "," + b +
+            " C " + d + "," + b + " " + b + "," + d + " " + b + "," + a +
+            " " + b + "," + e + " " + d + "," + c + " " + a + "," + c +
+            " " + e + "," + c + " " + c + "," + c + " " + c + "," + a +
+            " " + c + "," + d + " " + c + "," + b + " " + a + "," + b +
+            " Z";
+    }
+
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 50 " + (width) + " " + (chevronHeight * 2));
+
+    var linkGenerator = d3.linkHorizontal()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        });
+
+
+    svgContainer.append("svg:defs").selectAll("marker")
+        .data(["build", "test", "release"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 5)
+        .attr("refY", 0)
+        .attr("markerWidth", 4)
+        .attr("markerHeight", 4)
+        .attr("orient", "auto")
+        .classed("arrow-head", true)
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+    // Chevrons
+    var code = chevron(svgContainer, "Code", "#00695C");
+    code.attr("transform", "translate(" + (centerX - 4 * chevronWidth / 2) + ", 0)");
+    var build = chevron(svgContainer, "Build", "#37474F");
+    build.attr("transform", "translate(" + (centerX - 2 * chevronWidth / 2) + ", 0)");
+    var test = chevron(svgContainer, "Test", "#EF6C00");
+    test.attr("transform", "translate(" + (centerX) + ", 0)");
+    var release = chevron(svgContainer, "Release", "#0277BD");
+    release.attr("transform", "translate(" + (centerX + 2 * chevronWidth / 2) + ", 0)");
+
+    function createIcon(symbol, text, x, y, ratio, clazz, fontRatio) {
+        if (!fontRatio) {
+            fontRatio = 1;
+        }
+        var icon = svgContainer.append("g")
+            .classed("node", true)
+            .classed(clazz, true)
+            .attr("transform", "translate(" + x + "," + y + ")")
+            .style("opacity", 0);
+        icon.append("path")
+            .classed("source-code", true)
+            .attr("d", squircle(width / (10 * ratio), 6));
+        icon.append("text")
+            .classed("icon", true)
+            .style("font-size", (width / (250 * ratio * fontRatio)) + "em")
+            .text(symbol);
+        icon.append("text")
+            .classed("label", true)
+            .attr("dy", width / (11 * ratio))
+            .style("font-size", (width / (300 * ratio)) + "em")
+            .text(text);
+        return icon;
+    }
+
+    function createLink(sourceX, sourceY, targetX, targetY, clazz) {
+        return svgContainer.append("path")
+            .classed("link", true)
+            .classed(clazz, true)
+            .style("stroke-width", (width / 300) + "px")
+            .data([
+                {
+                    source: {x: sourceX, y: sourceY},
+                    target: {x: targetX, y: targetY}
+                }
+            ])
+            .attr("d", linkGenerator);
+    }
+
+    function setTotalLength(link, totalLength) {
+        link.attr("stroke-dasharray", totalLength + " " + totalLength)
+            .attr("stroke-dashoffset", totalLength);
+    }
+
+    var heightOffset = height * 0.05;
+
+    // Code
+    var sourceCodeX = centerX - 3 * chevronWidth / 2;
+    var sourceCodeY = height * 0.25 - heightOffset;
+    var sourceCode = createIcon("</>", "Java", sourceCodeX, sourceCodeY, 1.2, "code");
+    var sourceCodeWidth = sourceCode.select("path").node().getBBox().width;
+
+    var sourceCode2X = centerX - 3 * chevronWidth / 2;
+    var sourceCode2Y = height * 0.60 - heightOffset;
+    var sourceCode2 = createIcon("</>", "SQL", sourceCode2X, sourceCode2Y, 1.2, "code");
+    var sourceCode2Width = sourceCode.select("path").node().getBBox().width;
+
+    // Build
+    var clazzX = centerX - chevronWidth / 2;
+    var clazzY = height * 0.25 - heightOffset;
+    var clazz = createIcon("011010", "Class", clazzX, clazzY, 1.2, "build", 2);
+    var clazzWidth = clazz.select("path").node().getBBox().width;
+
+    var link1 = createLink(sourceCodeX + sourceCodeWidth / 1.5, sourceCodeY,
+        clazzX - clazzWidth / 1.5, clazzY, "build");
+    var totalLength1 = link1.node().getTotalLength();
+    setTotalLength(link1, totalLength1);
+
+    // Test
+    var junitX = centerX + chevronWidth / 2;
+    var junitY = height * 0.35 - heightOffset;
+    var junit = createIcon("JU", "JUnit", junitX, junitY, 1.6, "test");
+    var junitWidth = junit.select("path").node().getBBox().width;
+
+    var link3 = createLink(clazzX + clazzWidth / 1.5, clazzY + clazzWidth * 0.1,
+        junitX - junitWidth / 1.5, junitY, "test");
+    var totalLength3 = link3.node().getTotalLength();
+    setTotalLength(link3, totalLength3);
+
+    var flywayX = centerX + chevronWidth / 2;
+    var flywayY = height * 0.70 - heightOffset;
+    var flyway = createIcon("FW", "Flyway", flywayX, flywayY, 1.6, "test");
+    var flywayWidth = flyway.select("path").node().getBBox().width;
+
+    var link4 = createLink(sourceCode2X + sourceCode2Width / 1.5, sourceCode2Y + sourceCode2Width * 0.1,
+        flywayX - flywayWidth / 1.5, flywayY, "test");
+    var totalLength4 = link4.node().getTotalLength();
+    setTotalLength(link4, totalLength4);
+
+    // Releasec
+    var warjarX = centerX + 3 * chevronWidth / 2;
+    var warjarY = height * 0.25 - heightOffset;
+    var warjar = createIcon("zip", "Jar | War", warjarX, warjarY, 1.2, "release");
+    var warjarWidth = warjar.select("path").node().getBBox().width;
+
+    var link5 = createLink(clazzX + clazzWidth / 1.5, clazzY - clazzWidth * 0.1,
+        warjarX - warjarWidth / 1.5, warjarY, "release");
+    var totalLength5 = link5.node().getTotalLength();
+    setTotalLength(link5, totalLength5);
+
+    var sqljarX = centerX + 3 * chevronWidth / 2;
+    var sqljarY = height * 0.60 - heightOffset;
+    var sqljar = createIcon("zip", "SQL Jar", sqljarX, sqljarY, 1.2, "release");
+    var sqljarWidth = sqljar.select("path").node().getBBox().width;
+
+    var link6 = createLink(sourceCode2X + sourceCode2Width / 1.5, sourceCode2Y - sourceCode2Width * 0.1,
+        sqljarX - sqljarWidth / 1.5, sqljarY, "release");
+    var totalLength6 = link6.node().getTotalLength();
+    setTotalLength(link6, totalLength6);
+
+    var checksumX = centerX + 3 * chevronWidth / 2;
+    var checksumY = height * 0.41 - heightOffset;
+    var checksum = createIcon("101", "checksum", checksumX, checksumY, 2, "release");
+
+    var sqlPomX = centerX + 3 * chevronWidth / 2;
+    var sqlPomY = height * 0.76 - heightOffset;
+    var sqlPom = createIcon("xml", "SQL Pom", sqlPomX, sqlPomY, 2, "release");
+
+    var _transitions = [
+        {
+            transitionForward: function () {
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 0 " + width + " " + height)
+                    .ease(d3.easeSin)
+                    .duration(150);
+                sourceCode
+                    .transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 1)
+                    .duration(250);
+                sourceCode2
+                    .transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 1)
+                    .duration(250);
+                build
+                    .transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 0.3)
+                    .duration(150);
+                test
+                    .transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 0.3)
+                    .duration(150);
+                release
+                    .transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 0.3)
+                    .duration(150);
+            },
+            transitionBackward: function () {
+                sourceCode
+                    .transition()
+                    .style("opacity", 0)
+                    .ease(d3.easeSin)
+                    .duration(250);
+                sourceCode2
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(250);
+                build
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                test
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                release
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                svgContainer
+                    .transition()
+                    .attr("viewBox", "0 50 " + (width) + " " + (chevronHeight * 2))
+                    .ease(d3.easeSin)
+                    .duration(150);
+            }
+        },
+        {
+            transitionForward: function() {
+                link1
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#build)")
+                    .duration(50);
+                build
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                clazz
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                build
+                    .transition()
+                    .style("opacity", 0.3)
+                    .duration(150);
+                clazz
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                link1
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength1)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function() {
+                link3
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#test)")
+                    .duration(50);
+                link4
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#test)")
+                    .duration(50);
+                test
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                junit
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                flyway
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                test
+                    .transition()
+                    .style("opacity", 0.3)
+                    .duration(150);
+                flyway
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                junit
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                link4
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength4)
+                    .duration(250);
+                link3
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength3)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function() {
+                link5
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#release)")
+                    .duration(50);
+                link6
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#release)")
+                    .duration(50);
+                release
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                warjar
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+                sqljar
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                release
+                    .transition()
+                    .style("opacity", 0.3)
+                    .duration(150);
+                warjar
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                sqljar
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+                link5
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength5)
+                    .duration(250);
+                link6
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength6)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function() {
+                checksum
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                checksum
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+            }
+        },
+        {
+            transitionForward: function() {
+                svgContainer
+                    .attr("viewBox", "0 0 " + width + " " + height);
+                sourceCode.style("opacity", 1);
+                sourceCode2.style("opacity", 1);
+                link1.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#build)");
+                build.style("opacity", 1);
+                clazz.style("opacity", 1);
+                link3.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#test)");
+                link4.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#test)");
+                test.style("opacity", 1);
+                junit.style("opacity", 1);
+                flyway.style("opacity", 1);
+                link5.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#release)");
+                link6.style("stroke-dashoffset", 0)
+                    .attr("marker-end", "url(#release)");
+                release.style("opacity", 1);
+                warjar.style("opacity", 1);
+                sqljar.style("opacity", 1);
+                checksum.style("opacity", 1);
+
+
+                sqlPom
+                    .transition()
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                sqlPom
+                    .transition()
+                    .style("opacity", 0)
+                    .duration(150);
+            }
+        }
+    ];
+</script>
+</body>

@@ -1,0 +1,16 @@
+baseURL = "https://kissy.github.io/platform-evolution-post-mortem/"
+languageCode = "en-us"
+title = "Platform Evolution — Post Mortem"
+theme = "reveal-hugo"
+publishDir = "docs"
+
+[outputFormats.Reveal]
+baseName = "index"
+mediaType = "text/html"
+isHTML = true
+
+[params.reveal_hugo]
+reveal_cdn = "https://kissy.github.io/platform-evolution-post-mortem/reveal-js"
+theme = "tvld"
+width = "80%"
+height = "80%"

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+<style type="text/css">
+    body {
+        font: 12px Arial;
+        font-family: 'Roboto', sans-serif;
+        text-align: center;
+    }
+
+    body > svg {
+        background: none;
+    }
+
+    .node {
+        transform-origin: center;
+    }
+
+    .node > path {
+        fill: #085FC0;
+    }
+    .node.code > path,
+    .node.code > text,
+    .arrow-head#code {
+        fill: #00695C;
+    }
+    .node.build > path,
+    .node.build > text,
+    .arrow-head#build {
+        fill: #37474F;
+    }
+    .node.test > path,
+    .node.test > text,
+    .arrow-head#test {
+        fill: #EF6C00;
+    }
+    .node.release > path,
+    .node.release > text,
+    .arrow-head#release {
+        fill: #0277BD;
+    }
+    .node.release2 > path,
+    .node.release2 > text,
+    .arrow-head#release2 {
+        fill: #4527A0;
+    }
+    .node.release3 > path,
+    .node.release3 > text,
+    .arrow-head#release3 {
+        fill: #1565C0;
+    }
+
+    .node > text {
+        text-anchor: middle;
+    }
+
+    .node > text.icon {
+        fill: white;
+        dominant-baseline: central;
+    }
+
+    .link {
+        fill: none;
+    }
+    .link.code {
+        stroke: #00695C;
+    }
+    .link.build {
+        stroke: #37474F;
+    }
+    .link.test {
+        stroke: #EF6C00;
+    }
+    .link.release {
+        stroke: #0277BD;
+    }
+    .link.release2 {
+        stroke: #4527A0;
+    }
+    .link.release3 {
+        stroke: #1565C0;
+    }
+
+</style>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+<script type="text/javascript">
+
+    var width = window.innerWidth * 0.8;
+    var height = window.innerHeight * 0.8;
+    var centerX = width / 2;
+    var centerY = height / 2;
+    var chevronWidth = width / 3;
+    var chevronHeight = height / 15;
+
+    function chevron(container, text, color) {
+        var group = container.append("g")
+            .style("opacity", 0);
+        group
+            .append("rect")
+            .attr("width", chevronWidth)
+            .attr("height", chevronHeight)
+            .attr("rx", 10)
+            .style("fill", color);
+        group.append("text")
+            .attr("x", chevronWidth / 2)
+            .attr("y", chevronHeight / 2)
+            .attr("fill", "#FFF")
+            .attr("font-size", "30")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .text(text);
+        return group;
+    }
+
+    function squircle(size, round) {
+        var halfSize = size / 2;
+        var a = 0;
+        var b = halfSize - size;
+        var c = halfSize;
+        var d = b + round;
+        var e = c - round;
+        return "M " + a + "," + b +
+            " C " + d + "," + b + " " + b + "," + d + " " + b + "," + a +
+            " " + b + "," + e + " " + d + "," + c + " " + a + "," + c +
+            " " + e + "," + c + " " + c + "," + c + " " + c + "," + a +
+            " " + c + "," + d + " " + c + "," + b + " " + a + "," + b +
+            " Z";
+    }
+
+    var svgContainer = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 0 " + (width) + " " + (height));
+
+    var linkGenerator = d3.linkHorizontal()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        });
+
+
+    svgContainer.append("svg:defs").selectAll("marker")
+        .data(["code", "build", "test", "release", "release2", "release3"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 5)
+        .attr("refY", 0)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .classed("arrow-head", true)
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+    // Rect
+    var chef = chevron(svgContainer, "Chef Server", "#00695C");
+    chef.attr("transform", "translate(" + (width * 0.20 - chevronWidth / 2) + ", 0)");
+    var nexus = chevron(svgContainer, "Nexus", "#0277BD");
+    nexus.attr("transform", "translate(" + (width * 0.80 - chevronWidth / 2) + ", 0)");
+
+    function createIcon(symbol, text, x, y, ratio, clazz, font_ratio) {
+        if (!font_ratio) {
+            font_ratio = 1;
+        }
+        var icon = svgContainer.append("g")
+            .classed("node", true)
+            .classed(clazz, true)
+            .attr("transform", "translate(" + x + "," + y + ")")
+            .style("opacity", 0);
+        icon.append("path")
+            .classed("source-code", true)
+            .attr("d", squircle(width / (10 * ratio), 6));
+        icon.append("text")
+            .classed("icon", true)
+            .style("font-size", (width / (250 * ratio * font_ratio)) + "em")
+            .text(symbol);
+        icon.append("text")
+            .classed("label", true)
+            .attr("dy", width / (12 * ratio))
+            .style("font-size", (width / (350 * ratio)) + "em")
+            .text(text);
+        return icon;
+    }
+
+    function createLink(sourceX, sourceY, targetX, targetY, clazz) {
+        return svgContainer.append("path")
+            .classed("link", true)
+            .classed(clazz, true)
+            .style("stroke-width", (width / 300) + "px")
+            .data([
+                {
+                    source: {x: sourceX, y: sourceY},
+                    target: {x: targetX, y: targetY}
+                }
+            ])
+            .attr("d", linkGenerator);
+    }
+
+    function setTotalLength(link, totalLength) {
+        link.attr("stroke-dasharray", totalLength + " " + totalLength)
+            .attr("stroke-dashoffset", totalLength);
+    }
+
+    var heightOffset = height * 0.1;
+
+    var internetX = width * 0.1;
+    var internetY = centerY - heightOffset;
+    var internet = createIcon("-", "Internet", internetX, internetY, 1.2, "build");
+    var internetWidth = internet.select("path").node().getBBox().width;
+    internet.style("opacity", 1);
+
+    // Apps
+    var app1X = width * 0.9;
+    var app1Y = height * 0.20 - heightOffset;
+    var app1 = createIcon("W1", "Virtual Machine", app1X, app1Y, 1.2, "release", 1.2);
+    var app1Width = app1.select("path").node().getBBox().width;
+    app1.style("opacity", 1);
+
+    var app2X = width * 0.9;
+    var app2Y = height * 0.50 - heightOffset;
+    var app2 = createIcon("W2", "Virtual Machine", app2X, app2Y, 1.2, "release", 1.2);
+    var app2Width = app2.select("path").node().getBBox().width;
+    app2.style("opacity", 1);
+
+    var app3X = width * 0.9;
+    var app3Y = height * 0.80 - heightOffset;
+    var app3 = createIcon("W3", "Virtual Machine", app3X, app3Y, 1.2, "release", 1.2);
+    var app3Width = app3.select("path").node().getBBox().width;
+    app3.style("opacity", 1);
+
+    // Direct
+    var link1 = createLink(internetX + internetWidth / 1.5, internetY * 0.95,
+        app1X - app1Width / 1.5, app1Y, "release");
+    var totalLength1 = link1.node().getTotalLength();
+    setTotalLength(link1, totalLength1);
+
+    var link2 = createLink(internetX + internetWidth / 1.5, internetY,
+        app2X - app2Width / 1.5, app2Y, "release");
+    var totalLength2 = link2.node().getTotalLength();
+    setTotalLength(link2, totalLength2);
+
+    var link3 = createLink(internetX + internetWidth / 1.5, internetY * 1.05,
+        app3X - app3Width / 1.5, app3Y, "release");
+    var totalLength3 = link3.node().getTotalLength();
+    setTotalLength(link3, totalLength3);
+
+    // RP
+    var rpX = width * 0.35;
+    var rpY = centerY - heightOffset;
+    var rp = createIcon("RP", "Reverse Proxy", rpX, rpY, 1.2, "code", 1.3);
+    var rpWidth = rp.select("path").node().getBBox().width;
+
+    var link4 = createLink(internetX + internetWidth / 1.5, internetY,
+        rpX - rpWidth / 1.5, rpY, "code");
+    var totalLength4 = link4.node().getTotalLength();
+    setTotalLength(link4, totalLength4);
+
+    // SLB
+    var slbX = width * 0.6;
+    var slbY = centerY - heightOffset;
+    var slb = createIcon("LB", "Load Balancer", slbX, slbY, 1.2, "code", 1.3);
+    var slbWidth = slb.select("path").node().getBBox().width;
+
+    var link5 = createLink(rpX + rpWidth / 1.5, rpY,
+        slbX - slbWidth / 1.5, slbY, "code");
+    var totalLength5 = link5.node().getTotalLength();
+    setTotalLength(link5, totalLength5);
+
+    // Apps 2
+    var app4X = width * 0.9;
+    var app4Y = height * 0.20 - heightOffset;
+    var app4 = createIcon("App", "Application", app4X, app4Y, 1.2, "release2", 1.3);
+
+    var app5X = width * 0.9;
+    var app5Y = height * 0.50 - heightOffset;
+    var app5 = createIcon("App", "Application", app5X, app5Y, 1.2, "release2", 1.3);
+
+    var app6X = width * 0.9;
+    var app6Y = height * 0.80 - heightOffset;
+    var app6 = createIcon("App", "Application", app6X, app6Y, 1.2, "release3", 1.3);
+
+    var link6 = createLink(slbX + slbWidth / 1.5, slbY * 0.95,
+        app4X - app1Width / 1.5, app4Y, "release2");
+    var totalLength6 = link6.node().getTotalLength();
+    setTotalLength(link6, totalLength6);
+
+    var link7 = createLink(slbX + slbWidth / 1.5, slbY,
+        app5X - app2Width / 1.5, app5Y, "release2");
+    var totalLength7 = link7.node().getTotalLength();
+    setTotalLength(link7, totalLength7);
+
+    var link8 = createLink(slbX + slbWidth / 1.5, slbY * 1.05,
+        app6X - app3Width / 1.5, app6Y, "release3");
+    var totalLength8 = link8.node().getTotalLength();
+    setTotalLength(link8, totalLength8);
+
+    var crossSize = 96 + 16;
+    var failure = svgContainer
+        .append("g")
+        .style("transform", " translate(" + (app5X - crossSize / 2) + "px, " + (app5Y - crossSize / 2) + "px)")
+        .style("opacity", 0);
+    failure.append("path")
+        .attr("d", "M 16,16 L 96,96 z M 16,96 L 96,16 z")
+        .attr("stroke", "#C62828")
+        .attr("stroke-width", "11.3");
+
+    var _transitions = [
+        {
+            transitionForward: function () {
+                link1
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#release)")
+                    .duration(50);
+                link2
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#release)")
+                    .duration(50);
+                link3
+                    .transition()
+                    .style("stroke-dashoffset", 0)
+                    .duration(250)
+                    .transition()
+                    .attr("marker-end", "url(#release)")
+                    .duration(50);
+            },
+            transitionBackward: function () {
+                link1
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength1)
+                    .duration(250);
+                link2
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength2)
+                    .duration(250);
+                link3
+                    .transition()
+                    .attr("marker-end", "")
+                    .duration(50)
+                    .transition()
+                    .style("stroke-dashoffset", totalLength3)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function() {
+                var t = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        rp.transition()
+                            .style("opacity", 1)
+                            .ease(d3.easeSin)
+                            .duration(150);
+                    });
+                link1
+                    .data([
+                        {
+                            source: {x: rpX + rpWidth / 1.5, y: rpY * 0.95},
+                            target: {x: app1X - app1Width / 1.5, y: app1Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link2
+                    .data([
+                        {
+                            source: {x: rpX + rpWidth / 1.5, y: rpY},
+                            target: {x: app2X - app2Width / 1.5, y: app2Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link3
+                    .data([
+                        {
+                            source: {x: rpX + rpWidth / 1.5, y: rpY * 1.05},
+                            target: {x: app3X - app3Width / 1.5, y: app3Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link4
+                    .transition(t)
+                    .style("stroke-dashoffset", 0)
+                    .transition()
+                    .attr("marker-end", "url(#code)")
+                    .duration(50);
+            },
+            transitionBackward: function() {
+                rp.transition()
+                    .style("opacity", 0)
+                    .ease(d3.easeSin)
+                    .duration(150);
+
+                var t = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250);
+                link1
+                    .data([
+                        {
+                            source: {x: internetX + internetWidth / 1.5, y: internetY * 0.95},
+                            target: {x: app1X - app1Width / 1.5, y: app1Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link2
+                    .data([
+                        {
+                            source: {x: internetX + internetWidth / 1.5, y: internetY},
+                            target: {x: app2X - app2Width / 1.5, y: app2Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link3
+                    .data([
+                        {
+                            source: {x: internetX + internetWidth / 1.5, y: internetY * 1.05},
+                            target: {x: app3X - app3Width / 1.5, y: app3Y}
+                        }
+                    ])
+                    .transition(t)
+                    .attr("d", linkGenerator);
+                link4.transition()
+                    .attr("marker-end", "")
+                    .duration(50);
+                link4
+                    .transition()
+                    .style("stroke-dashoffset", totalLength4)
+                    .duration(250);
+            }
+        },
+        {
+            transitionForward: function() {
+                var t = d3.transition()
+                    .duration(250)
+                    .on("end", function() {
+                        link5
+                            .transition()
+                            .style("stroke-dashoffset", 0)
+                            .duration(250)
+                            .on("end", function() {
+                                link5.attr("marker-end", "url(#code)");
+                                slb.transition()
+                                    .style("opacity", 1)
+                                    .ease(d3.easeSin)
+                                    .duration(150);
+                            });
+                    });
+
+                link1
+                    .attr("marker-end", "")
+                    .transition(t)
+                    .style("stroke-dashoffset", totalLength1);
+                link2
+                    .attr("marker-end", "")
+                    .transition(t)
+                    .style("stroke-dashoffset", totalLength2);
+                link3
+                    .attr("marker-end", "")
+                    .transition(t)
+                    .style("stroke-dashoffset", totalLength3);
+
+            },
+            transitionBackward: function() {
+                slb.transition()
+                    .style("opacity", 0)
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        link5
+                            .attr("marker-end", "")
+                            .transition()
+                            .style("stroke-dashoffset", totalLength5)
+                            .duration(250)
+                            .on("end", function() {
+                                var t = d3.transition()
+                                    .duration(250)
+                                    .on("end", function() {
+                                        link1.attr("marker-end", "url(#release)");
+                                        link2.attr("marker-end", "url(#release)");
+                                        link3.attr("marker-end", "url(#release)");
+                                    });
+
+                                link1
+                                    .transition(t)
+                                    .style("stroke-dashoffset", 0);
+                                link2
+                                    .transition(t)
+                                    .style("stroke-dashoffset", 0);
+                                link3
+                                    .transition(t)
+                                    .style("stroke-dashoffset", 0);
+                            });
+                    });
+            }
+        },
+        {
+            transitionForward: function() {
+                var tapp = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(150)
+                    .on("end", function() {
+                        var tlink = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(250)
+                            .on("end", function() {
+
+                                link6.attr("marker-end", "url(#release2)");
+                                link7.attr("marker-end", "url(#release2)");
+                                link8.attr("marker-end", "url(#release3)");
+
+                                var tapp = d3.transition()
+                                    .ease(d3.easeSin)
+                                    .duration(150);
+                                app4.transition(tapp)
+                                    .style("opacity", 1);
+                                app5.transition(tapp)
+                                    .style("opacity", 1);
+                                app6.transition(tapp)
+                                    .style("opacity", 1);
+                            });
+
+                        link6
+                            .transition(tlink)
+                            .style("stroke-dashoffset", 0);
+                        link7
+                            .transition(tlink)
+                            .style("stroke-dashoffset", 0);
+                        link8
+                            .transition(tlink)
+                            .style("stroke-dashoffset", 0);
+                    });
+                app1.transition(tapp)
+                    .style("opacity", 0);
+                app2.transition(tapp)
+                    .style("opacity", 0);
+                app3.transition(tapp)
+                    .style("opacity", 0);
+            },
+            transitionBackward: function() {
+                var tlink = d3.transition()
+                    .ease(d3.easeSin)
+                    .duration(250)
+                    .on("end", function() {
+                        var tapp2 = d3.transition()
+                            .ease(d3.easeSin)
+                            .duration(150)
+                            .on("end", function() {
+                                var tapp = d3.transition()
+                                    .ease(d3.easeSin)
+                                    .duration(150);
+                                app1.transition(tapp)
+                                    .style("opacity", 1);
+                                app2.transition(tapp)
+                                    .style("opacity", 1);
+                                app3.transition(tapp)
+                                    .style("opacity", 1);
+                            });
+                        app4.transition(tapp2)
+                            .style("opacity", 0);
+                        app5.transition(tapp2)
+                            .style("opacity", 0);
+                        app6.transition(tapp2)
+                            .style("opacity", 0);
+                    });
+
+                link6.attr("marker-end", "");
+                link7.attr("marker-end", "");
+                link8.attr("marker-end", "");
+
+                link6
+                    .transition(tlink)
+                    .style("stroke-dashoffset", totalLength6);
+                link7
+                    .transition(tlink)
+                    .style("stroke-dashoffset", totalLength7);
+                link8
+                    .transition(tlink)
+                    .style("stroke-dashoffset", totalLength8);
+
+            }
+        },
+        {
+            transitionForward: function() {
+                rp.style("opacity", 1);
+                slb.style("opacity", 1);
+                link5.attr("marker-end", "url(#code)")
+                    .style("stroke-dashoffset", 0);
+                link4.attr("marker-end", "url(#code)")
+                    .style("stroke-dashoffset", 0);
+                link6.attr("marker-end", "url(#release2)")
+                    .style("stroke-dashoffset", 0);
+                link7.attr("marker-end", "url(#release2)")
+                    .style("stroke-dashoffset", 0);
+                link8.attr("marker-end", "url(#release3)")
+                    .style("stroke-dashoffset", 0);
+
+                app1.style("opacity", 0);
+                app2.style("opacity", 0);
+                app3.style("opacity", 0);
+                app4.style("opacity", 1);
+                app5.style("opacity", 1);
+                app6.style("opacity", 1);
+
+                failure.transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 1)
+                    .duration(150);
+            },
+            transitionBackward: function() {
+                failure.transition()
+                    .ease(d3.easeSin)
+                    .style("opacity", 0)
+                    .duration(150);
+            }
+        }
+    ];
+</script>
+</body>
